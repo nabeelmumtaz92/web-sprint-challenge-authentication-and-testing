@@ -1,19 +1,19 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
+const express = require('express')
+const authRouter = require('./auth/auth-router')
+const restricted = require('./middleware/restricted')
+const jokesRouter = require('./jokes/jokes-router')
 
-const restrict = require('./middleware/restricted.js');
+const server = express()
+server.use(express.json())
 
-const authRouter = require('./auth/auth-router.js');
-const jokesRouter = require('./jokes/jokes-router.js');
+server.use('/api/auth', authRouter)
+server.use('/api/jokes', restricted, jokesRouter)
 
-const server = express();
+server.use((err, req, res, next) => { // eslint-disable-line
+  res.status(err.status || 500).json({
+    message: err.message,
+    stack: err.stack,
+  })
+})
 
-server.use(helmet());
-server.use(cors());
-server.use(express.json());
-
-server.use('/api/auth', authRouter);
-server.use('/api/jokes', restrict, jokesRouter); // only logged-in users should have access!
-
-module.exports = server;
+module.exports = server
